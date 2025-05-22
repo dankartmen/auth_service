@@ -1,11 +1,5 @@
 # Используем официальный образ Python
-FROM python:3.9-slim
-
-# Устанавливаем зависимости
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.9
 
 # Рабочая директория
 WORKDIR /app
@@ -20,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ./app /app
 
 # Команда запуска
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
