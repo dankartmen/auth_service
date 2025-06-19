@@ -4,14 +4,10 @@ FROM python:3.9
 # Рабочая директория
 WORKDIR /app
 
-# Копируем зависимости
-COPY requirements.txt .
+COPY . .
 
 # Устанавливаем зависимости
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Копируем исходный код
-COPY ./app /app
+RUN pip install -r requirements.txt
 
 # Команда запуска
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
