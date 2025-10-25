@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional, Dict
 from datetime import datetime
 
@@ -68,3 +68,42 @@ class ExerciseHistoryOut(ExerciseHistoryBase):
     user_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TrainingScheduleCreate(BaseModel):
+    questionnaire_id: int  # ID анкеты для генерации
+
+class TrainingScheduleOut(BaseModel):
+    id: int
+    user_id: int
+    questionnaire_id: int
+    injury_type: str
+    specific_injury: str
+    generated_at: datetime
+    is_active: bool
+
+    trainings: List['TrainingOut'] = []  # Вложенные тренировки 
+
+    model_config = ConfigDict(from_attributes=True)
+
+class TrainingCreate(BaseModel):
+    exercise_id: int
+    date: datetime
+    time: str  # "HH:MM"
+    is_completed: bool = False
+
+class TrainingOut(BaseModel):
+    id: int
+    schedule_id: int
+    exercise_id: int
+    date: datetime
+    time: str
+    is_completed: bool
+    completed_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+# Для полного расписания 
+class FullScheduleOut(BaseModel):
+    schedule: TrainingScheduleOut
+    exercises: Dict[int, str]  # exercise_id -> title (для фронта)
