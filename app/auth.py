@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -94,7 +94,7 @@ def create_questionnaire(
 	    print(f"Questionnaire data : {questionnaire.dict()}")
         # проверка существования анкеты
         existing = db.query(models.Questionnaire).filter(
-            models.Questionnaire.user_id == user.id
+            models.Questionnaire.user_id == current_user.id
         ).first()
 
         if existing:
@@ -197,7 +197,7 @@ def add_exercise_history(
 ):
     # Проверяем, что пользователь добавляет свою историю
     if current_user.id != history.user_id:
-        raise HTTPException(status_code=403, detail="Forbidden")
+        raise HTTPException(status_code=403, detail="Запрещено")
 
     db_history = models.ExerciseHistory(**history.dict())
     db.add(db_history)
@@ -213,7 +213,7 @@ def get_exercise_history(
 ):
     # Проверяем права доступа
     if current_user.id != user_id:
-        raise HTTPException(status_code=403, detail="Forbidden")
+        raise HTTPException(status_code=403, detail="Запрещено")
 
     return db.query(models.ExerciseHistory).filter(
         models.ExerciseHistory.user_id == user_id
@@ -227,11 +227,11 @@ def delete_exercise_history(
 ):
     history_item = db.query(models.ExerciseHistory).get(history_id)
     if not history_item:
-        raise HTTPException(status_code=404, detail="History item not found")
+        raise HTTPException(status_code=404, detail="Элемент история не найден")
 
     if history_item.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Forbidden")
+        raise HTTPException(status_code=403, detail="Запрещено")
 
     db.delete(history_item)
     db.commit()
-    return {"message": "History item deleted"}
+    return {"message": "Элемент истории удалён"}
