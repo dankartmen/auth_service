@@ -1,6 +1,12 @@
 from fastapi import FastAPI
-from app import auth
+from app.routers import auth, exercises, history, questionnaires, schedules
 
-app = FastAPI()
+app = FastAPI(title="Health App API", version="0.0.1")
+
+init_db()
 
 app.include_router(auth.router)
+app.include_router(questionnaires.router)
+app.include_router(schedules.router)
+app.include_router(history.router)  
+app.include_router(exercises.router)
