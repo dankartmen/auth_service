@@ -23,7 +23,7 @@ def debug_exercises(db: Session = Depends(get_db)):
         print(f"  debug_exercises: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
         
-@router.get("/exercises", response_model=list[schemas.ExerciseOut])
+@router.get("/", response_model=list[schemas.ExerciseOut])
 def get_exercises(
     injury_type: Optional[str] = Query(None),
     db: Session = Depends(get_db)

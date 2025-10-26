@@ -34,7 +34,7 @@ def should_add_training(date: datetime, frequency: Dict[str, int]) -> bool:
     is_training_day = day_of_week <= days_per_week
     return is_training_day and (date.day % (7 // times_per_day if times_per_day > 0 else 1) == 0)
 
-@router.post("/schedules", response_model=schemas.TrainingScheduleOut)
+@router.post("/", response_model=schemas.TrainingScheduleOut)
 def generate_schedule(
     create_data: schemas.TrainingScheduleCreate,
     current_user: models.User = Depends(get_current_user),
@@ -120,7 +120,7 @@ def get_schedules(
         ).all()
     return schedules
 
-@router.put("/schedules/{schedule_id}/trainings/{training_id}", response_model=schemas.TrainingOut)
+@router.put("/{schedule_id}/trainings/{training_id}", response_model=schemas.TrainingOut)
 def update_training_status(
     schedule_id: int,
     training_id: int,
@@ -148,7 +148,7 @@ def update_training_status(
     db.refresh(training)
     return training
 
-@router.get("/schedules/{schedule_id}/trainings", response_model=List[schemas.TrainingOut])
+@router.get("/{schedule_id}/trainings", response_model=List[schemas.TrainingOut])
 def get_trainings_for_schedule(
     schedule_id: int,
     current_user: models.User = Depends(get_current_user),
@@ -162,7 +162,7 @@ def get_trainings_for_schedule(
         raise HTTPException(status_code=404, detail="Расписание не найдено")
     return db.query(models.Training).filter(models.Training.schedule_id == schedule_id).all()
 
-@router.post("/schedules/{schedule_id}/trainings", response_model=schemas.TrainingOut)
+@router.post("/{schedule_id}/trainings", response_model=schemas.TrainingOut)
 def create_training(schedule_id: int, training: schemas.TrainingCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     schedule = db.query(models.TrainingSchedule).filter(models.TrainingSchedule.id == schedule_id, models.TrainingSchedule.user_id == current_user.id).first()
     if not schedule:
@@ -173,7 +173,7 @@ def create_training(schedule_id: int, training: schemas.TrainingCreate, current_
     db.refresh(db_training)
     return db_training
 
-@router.put("/schedules/{schedule_id}/trainings/{training_id}", response_model=schemas.TrainingOut)
+@router.put("/{schedule_id}/trainings/{training_id}", response_model=schemas.TrainingOut)
 def update_training(schedule_id: int, training_id: int, training_update: schemas.TrainingOut, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Аналогично update_training_status, но обновляйте все поля
     training = db.query(models.Training).filter(models.Training.id == training_id, models.Training.schedule_id == schedule_id).first()
@@ -185,7 +185,7 @@ def update_training(schedule_id: int, training_id: int, training_update: schemas
     db.refresh(training)
     return training
 
-@router.delete("/schedules/{schedule_id}/trainings/{training_id}")
+@router.delete("/{schedule_id}/trainings/{training_id}")
 def delete_training(schedule_id: int, training_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     training = db.query(models.Training).filter(models.Training.id == training_id, models.Training.schedule_id == schedule_id).first()
     if not training:
