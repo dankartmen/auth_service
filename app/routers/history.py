@@ -7,7 +7,7 @@ from app.database import get_db
 
 router = APIRouter(prefix="/history", tags=["History"])
 
-@router.post("/history", response_model=schemas.ExerciseHistoryOut)
+@router.post("/", response_model=schemas.ExerciseHistoryOut)
 def add_exercise_history(
     history: schemas.ExerciseHistoryCreate,
     current_user: models.User = Depends(get_current_user),
@@ -37,7 +37,7 @@ def get_exercise_history(
         models.ExerciseHistory.user_id == user_id
     ).order_by(models.ExerciseHistory.date_time.desc()).all()
 
-@router.delete("/history/{history_id}")
+@router.delete("/{history_id}")
 def delete_exercise_history(
     history_id: int,
     current_user: models.User = Depends(get_current_user),

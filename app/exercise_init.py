@@ -1,4 +1,3 @@
-from app import models, schemas
 from sqlalchemy.orm import Session
 
 initial_exercises = [
@@ -160,6 +159,8 @@ initial_exercises = [
     }
 ]
 def init_db(db: Session):
+    from app import models
+
     if db.query(models.Exercise).count() > 0:
         return
     for exercise_data in initial_exercises:
@@ -169,6 +170,7 @@ def init_db(db: Session):
     db.commit()
 
 if __name__ == "__main__":
+    from app.database import SessionLocal
     db = SessionLocal()
     try:
         init_db(db)
