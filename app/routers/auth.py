@@ -12,14 +12,20 @@ security = HTTPBasic()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+def debug_password_analysis(password: str):
+    print(f"Password: {password}")
+    print(f"Length: {len(password)}")
+    print(f"Bytes: {len(password.encode('utf-8'))}")
+    print(f"Characters: {[c for c in password]}")
+    print(f"Byte values: {[b for b in password.encode('utf-8')]}")
+    
 
 def authenticate(credentials: HTTPBasicCredentials, db: Session):
+    debug_password_analysis(credentials.password)  # Временная диагностика
     user = db.query(models.User).filter(
         models.User.username == credentials.username
     ).first()
 
-    print(f"Password length: {len(user.password)}")
-    print(f"Password bytes: {len(user.password.encode('utf-8'))}")
     if not user or not pwd_context.verify(credentials.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
