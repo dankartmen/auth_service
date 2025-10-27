@@ -18,6 +18,8 @@ def authenticate(credentials: HTTPBasicCredentials, db: Session):
         models.User.username == credentials.username
     ).first()
 
+    print(f"Password length: {len(user.password)}")
+    print(f"Password bytes: {len(user.password.encode('utf-8'))}")
     if not user or not pwd_context.verify(credentials.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
