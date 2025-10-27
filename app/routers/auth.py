@@ -1,42 +1,53 @@
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
 from app import models, schemas
 from app.database import get_db
-from typing import List
-
 
 router = APIRouter()
 security = HTTPBasic()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def hash_password(password: str) -> str:
+    """Хеширование пароля с помощью bcrypt"""
+    password_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
 
-def debug_password_analysis(password: str):
-    print(f"Password: {password}")
-    print(f"Length: {len(password)}")
-    print(f"Bytes: {len(password.encode('utf-8'))}")
-    print(f"Characters: {[c for c in password]}")
-    print(f"Byte values: {[b for b in password.encode('utf-8')]}")
-    
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Проверка пароля"""
+    try:
+        plain_bytes = plain_password.encode('utf-8')
+        hashed_bytes = hashed_password.encode('utf-8')
+        return bcrypt.checkpw(plain_bytes, hashed_bytes)
+    except Exception as e:
+        print(f"Ошибка верификации пароля: {e}")
+        return False
 
 def authenticate(credentials: HTTPBasicCredentials, db: Session):
-    debug_password_analysis(credentials.password)  # Временная диагностика
     user = db.query(models.User).filter(
         models.User.username == credentials.username
     ).first()
 
-    if not user or not pwd_context.verify(credentials.password, user.password):
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-         detail="Invalid credentials",
-         headers={"WWW-Authenticate": "Basic"},
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    
+    # Используем прямую проверку bcrypt
+    if not verify_password(credentials.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Basic"},
         )
     return user
 
 def get_current_user(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     return authenticate(credentials, db)
-
 
 @router.post("/register", response_model=schemas.UserOut)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -45,9 +56,10 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     ).first()
 
     if existing_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
+        raise HTTPException(status_code=400, detail="Логин уже зарегистрирован")
 
-    hashed_password = pwd_context.hash(user.password)
+    # Используем прямое хеширование bcrypt
+    hashed_password = hash_password(user.password)
     db_user = models.User(username=user.username, password=hashed_password)
 
     db.add(db_user)
@@ -72,20 +84,17 @@ def reset_password(
     new_password: str = Body(..., embed=True),
     db: Session = Depends(get_db)
 ):
-    # Находим пользователя по имени пользователя
     user = db.query(models.User).filter(
         models.User.username == username
     ).first()
 
     if not user:
-        # В целях безопасности не сообщаем, что пользователь не найден
         print("Если пользователь существует, пароль был изменен")
         return {"message": "Если пользователь существует, пароль был изменен"}
-    # Хешируем новый пароль
-    hashed_password = pwd_context.hash(new_password)
+    
+    # Используем прямое хеширование bcrypt
+    hashed_password = hash_password(new_password)
     user.password = hashed_password
     db.commit()
     print("Пароль успешно изменен")
     return {"message": "Пароль успешно изменен"}
-
-
